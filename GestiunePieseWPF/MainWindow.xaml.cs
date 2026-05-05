@@ -11,10 +11,12 @@ namespace GestiunePieseWPF
     {
         // Păstrăm lista de piese în memorie
         private List<PiesaAuto> listaPiese = new List<PiesaAuto>();
+        private List<string> categorii = new List<string> { "Motor", "Caroserie", "Electrice", "Consumabile" };
 
         public MainWindow()
         {
             InitializeComponent();
+            cmbCategorie.ItemsSource = categorii;
         }
 
         private void MnuExit_Click(object sender, RoutedEventArgs e)
@@ -50,7 +52,9 @@ namespace GestiunePieseWPF
                     CodPiesa = txtCod.Text,
                     Pret = pret,
                     Locatie = locatie,
-                    EsteDisponibilOnline = chkOnline.IsChecked ?? false
+                    EsteDisponibilOnline = chkOnline.IsChecked ?? false,
+                    Categorie = cmbCategorie.Text,
+                    DataAdaugare = dpDataAdaugare.SelectedDate
                 };
 
                 // Adăugare în listă
@@ -62,6 +66,9 @@ namespace GestiunePieseWPF
                 txtPret.Clear();
                 rbDepozit.IsChecked = true;
                 chkOnline.IsChecked = false;
+                cmbCategorie.SelectedIndex = -1;
+                cmbCategorie.Text = string.Empty;
+                dpDataAdaugare.SelectedDate = null;
                 
                 // Actualizare UI
                 ActualizareListaPiese(txtCautare.Text);
@@ -79,61 +86,83 @@ namespace GestiunePieseWPF
 
         private void ActualizareListaPiese(string filtru = "")
         {
-            pnlListaPiese.Children.Clear();
-
             // Căutare (Cerința 3) - după Nume sau Cod
             var pieseFiltrate = string.IsNullOrWhiteSpace(filtru) 
                 ? listaPiese 
                 : listaPiese.Where(p => p.Nume.Contains(filtru, StringComparison.OrdinalIgnoreCase) || 
                                         p.CodPiesa.Contains(filtru, StringComparison.OrdinalIgnoreCase)).ToList();
 
-            if (pieseFiltrate.Count == 0)
+            lstPiese.ItemsSource = null;
+            lstPiese.ItemsSource = pieseFiltrate;
+        }
+
+        private void LstPiese_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (lstPiese.SelectedItem is PiesaAuto piesaSelectata)
             {
-                TextBlock lblInfoText = new TextBlock
-                {
-                    Text = listaPiese.Count == 0 ? "Nu există piese în listă." : "Nu s-au găsit piese care să corespundă căutării.",
-                    Foreground = Brushes.Gray,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    Margin = new Thickness(0, 20, 0, 0)
-                };
-                pnlListaPiese.Children.Add(lblInfoText);
-                return;
+                txtNume.Text = piesaSelectata.Nume;
+                txtCod.Text = piesaSelectata.CodPiesa;
+                txtPret.Text = piesaSelectata.Pret.ToString();
+                
+                if (piesaSelectata.Locatie == "Depozit") rbDepozit.IsChecked = true;
+                else if (piesaSelectata.Locatie == "Magazin") rbMagazin.IsChecked = true;
+                else if (piesaSelectata.Locatie == "Furnizor") rbFurnizor.IsChecked = true;
+
+                chkOnline.IsChecked = piesaSelectata.EsteDisponibilOnline;
+                
+                cmbCategorie.Text = piesaSelectata.Categorie;
+                dpDataAdaugare.SelectedDate = piesaSelectata.DataAdaugare;
             }
+        }
 
-            // Recreăm UI-ul pentru fiecare piesă filtrată
-            foreach (var piesa in pieseFiltrate)
+        private void BtnModifica_Click(object sender, RoutedEventArgs e)
+        {
+            if (lstPiese.SelectedItem is PiesaAuto piesaSelectata)
             {
-                Border card = new Border
+                if (string.IsNullOrWhiteSpace(txtNume.Text) || string.IsNullOrWhiteSpace(txtCod.Text))
                 {
-                    Background = Brushes.White,
-                    BorderBrush = Brushes.LightGray,
-                    BorderThickness = new Thickness(1),
-                    CornerRadius = new CornerRadius(8),
-                    Padding = new Thickness(15),
-                    Margin = new Thickness(0, 0, 0, 10)
-                };
-
-                StackPanel continut = new StackPanel();
-                
-                // Header: Nume și Disponibilitate
-                StackPanel headerPanel = new StackPanel { Orientation = Orientation.Horizontal };
-                headerPanel.Children.Add(new TextBlock { Text = piesa.Nume, FontSize = 17, FontWeight = FontWeights.Bold, Foreground = (Brush)new BrushConverter().ConvertFromString("#2C3E50") });
-                
-                if (piesa.EsteDisponibilOnline)
-                {
-                    Border badge = new Border { Background = Brushes.LightGreen, CornerRadius = new CornerRadius(4), Padding = new Thickness(5,2,5,2), Margin = new Thickness(10,0,0,0), VerticalAlignment = VerticalAlignment.Center };
-                    badge.Child = new TextBlock { Text = "Online", FontSize = 10, FontWeight = FontWeights.Bold, Foreground = Brushes.DarkGreen };
-                    headerPanel.Children.Add(badge);
+                    MessageBox.Show("Introduceți numele și codul piesei!", "Atenție", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
                 }
-                
-                continut.Children.Add(headerPanel);
-                
-                // Info
-                continut.Children.Add(new TextBlock { Text = $"Cod: {piesa.CodPiesa} | Locație: {piesa.Locatie}", Foreground = Brushes.Gray, Margin = new Thickness(0, 5, 0, 0) });
-                continut.Children.Add(new TextBlock { Text = piesa.Pret.ToString("F2") + " RON", FontSize = 16, FontWeight = FontWeights.Bold, Foreground = Brushes.Green, Margin = new Thickness(0, 5, 0, 0) });
 
-                card.Child = continut;
-                pnlListaPiese.Children.Add(card);
+                if (double.TryParse(txtPret.Text, out double pret))
+                {
+                    piesaSelectata.Nume = txtNume.Text;
+                    piesaSelectata.CodPiesa = txtCod.Text;
+                    piesaSelectata.Pret = pret;
+
+                    string locatie = "Depozit";
+                    if (rbMagazin.IsChecked == true) locatie = "Magazin";
+                    else if (rbFurnizor.IsChecked == true) locatie = "Furnizor";
+                    piesaSelectata.Locatie = locatie;
+
+                    piesaSelectata.EsteDisponibilOnline = chkOnline.IsChecked ?? false;
+                    piesaSelectata.Categorie = cmbCategorie.Text;
+                    piesaSelectata.DataAdaugare = dpDataAdaugare.SelectedDate;
+
+                    // Curățare
+                    txtNume.Clear();
+                    txtCod.Clear();
+                    txtPret.Clear();
+                    rbDepozit.IsChecked = true;
+                    chkOnline.IsChecked = false;
+                    cmbCategorie.SelectedIndex = -1;
+                    cmbCategorie.Text = string.Empty;
+                    dpDataAdaugare.SelectedDate = null;
+
+                    lstPiese.SelectedItem = null; // deselectare
+                    
+                    ActualizareListaPiese(txtCautare.Text);
+                    MessageBox.Show("Piesa a fost modificată cu succes!", "Succes", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Introduceți un preț valid!", "Eroare", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Selectați o piesă din listă pentru a o modifica!", "Atenție", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }
@@ -146,5 +175,10 @@ namespace GestiunePieseWPF
         public double Pret { get; set; }
         public string Locatie { get; set; } = string.Empty;
         public bool EsteDisponibilOnline { get; set; }
+        public string Categorie { get; set; } = string.Empty;
+        public DateTime? DataAdaugare { get; set; }
+
+        public string PretAfisare => Pret.ToString("F2") + " RON";
+        public string DataAdaugareFormatata => DataAdaugare.HasValue ? "Adăugat la: " + DataAdaugare.Value.ToShortDateString() : "Fără dată adăugare";
     }
 }
