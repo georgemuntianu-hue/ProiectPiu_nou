@@ -53,7 +53,9 @@
         </Menu>
 
         <!-- Layout Responsive cu Grid (Cerința 1) -->
-        <Grid Margin="15">
+        <TabControl Margin="15" BorderThickness="0" Background="Transparent">
+            <TabItem Header="Piese Auto" Background="White">
+                <Grid Margin="15">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -134,5 +136,70 @@
                 </ListBox>
             </GroupBox>
         </Grid>
+            </TabItem>
+
+            <!-- Tab Furnizori (Cerința 1 - CRUD a doua entitate, Cerința 2 - Binding 2 controale) -->
+            <TabItem Header="Furnizori" Background="White">
+                <Grid Margin="15">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="350"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Formular Adăugare / Modificare Furnizor -->
+                    <Border Grid.Row="1" Grid.Column="0" Background="White" CornerRadius="10" Padding="20" VerticalAlignment="Top">
+                        <StackPanel>
+                            <TextBlock Text="GESTIUNE FURNIZOR" FontSize="18" FontWeight="Bold" Foreground="#3498DB" Margin="0,0,0,20"/>
+
+                            <TextBlock Text="Nume Furnizor:" Style="{StaticResource LabelStyle}"/>
+                            <!-- BINDING 1: TextBox pentru Nume -->
+                            <TextBox x:Name="txtFurnizorNume" Style="{StaticResource InputStyle}"
+                                     Text="{Binding ElementName=lstFurnizori, Path=SelectedItem.Nume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <TextBlock Text="CIF:" Style="{StaticResource LabelStyle}"/>
+                            <!-- BINDING 2: TextBox pentru CIF -->
+                            <TextBox x:Name="txtFurnizorCIF" Style="{StaticResource InputStyle}"
+                                     Text="{Binding ElementName=lstFurnizori, Path=SelectedItem.CIF, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <TextBlock Text="Telefon:" Style="{StaticResource LabelStyle}"/>
+                            <!-- BINDING 3: TextBox pentru Telefon -->
+                            <TextBox x:Name="txtFurnizorTelefon" Style="{StaticResource InputStyle}"
+                                     Text="{Binding ElementName=lstFurnizori, Path=SelectedItem.Telefon, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <TextBlock Text="Notă: Modificările din câmpuri se salvează automat datorită Data Binding-ului (Two-Way)." 
+                                       Foreground="Gray" FontSize="11" Margin="0,0,0,15" TextWrapping="Wrap"/>
+
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                                <Button Content="ADĂUGĂ FURNIZOR" Click="BtnAdaugaFurnizor_Click" Style="{StaticResource PrimaryButtonStyle}" Width="145" Margin="0,0,10,0"/>
+                                <Button Content="ȘTERGE FURNIZOR" Click="BtnStergeFurnizor_Click" Style="{StaticResource PrimaryButtonStyle}" Width="145" Background="#E74C3C"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Lista de Furnizori -->
+                    <GroupBox Header="FURNIZORI ÎNREGISTRAȚI" Grid.Row="1" Grid.Column="1" Margin="15,0,0,0" Padding="10" Background="White" BorderBrush="#E0E0E0">
+                        <ListBox x:Name="lstFurnizori" BorderThickness="0" Background="Transparent" HorizontalContentAlignment="Stretch">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="White" BorderBrush="LightGray" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,10">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Nume}" FontSize="17" FontWeight="Bold" Foreground="#2C3E50"/>
+                                            <TextBlock Foreground="Gray" Margin="0,5,0,0">
+                                                <Run Text="CIF: "/><Run Text="{Binding CIF}"/>
+                                                <Run Text=" | Telefon: "/><Run Text="{Binding Telefon}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </DockPanel>
 </Window>

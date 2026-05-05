@@ -4,6 +4,8 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.ComponentModel;
+using System.Collections.ObjectModel;
 
 namespace GestiunePieseWPF
 {
@@ -13,10 +15,20 @@ namespace GestiunePieseWPF
         private List<PiesaAuto> listaPiese = new List<PiesaAuto>();
         private List<string> categorii = new List<string> { "Motor", "Caroserie", "Electrice", "Consumabile" };
 
+        // Lista de furnizori (folosim ObservableCollection pentru actualizare automată în UI)
+        public ObservableCollection<Furnizor> ListaFurnizori { get; set; } = new ObservableCollection<Furnizor>();
+
         public MainWindow()
         {
             InitializeComponent();
             cmbCategorie.ItemsSource = categorii;
+
+            // Setăm lista de furnizori ca ItemsSource pentru lstFurnizori (se va defini în XAML)
+            lstFurnizori.ItemsSource = ListaFurnizori;
+            
+            // Câteva date de test
+            ListaFurnizori.Add(new Furnizor { Nume = "AutoParts SRL", CIF = "RO123456", Telefon = "0722111222" });
+            ListaFurnizori.Add(new Furnizor { Nume = "MotorExpert SA", CIF = "RO987654", Telefon = "0733444555" });
         }
 
         private void MnuExit_Click(object sender, RoutedEventArgs e)
@@ -165,6 +177,46 @@ namespace GestiunePieseWPF
                 MessageBox.Show("Selectați o piesă din listă pentru a o modifica!", "Atenție", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
+
+        // --- CRUD Furnizori ---
+
+        private void BtnAdaugaFurnizor_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtFurnizorNume.Text) || string.IsNullOrWhiteSpace(txtFurnizorCIF.Text))
+            {
+                MessageBox.Show("Introduceți numele și CIF-ul furnizorului!", "Atenție", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var furnizor = new Furnizor
+            {
+                Nume = txtFurnizorNume.Text,
+                CIF = txtFurnizorCIF.Text,
+                Telefon = txtFurnizorTelefon.Text
+            };
+
+            ListaFurnizori.Add(furnizor);
+
+            // Curățăm câmpurile doar dacă nu am folosit Binding bidirecțional pe textbox-uri pentru adăugare.
+            // Aici TextBox-urile sunt bindate la SelectedItem. Pentru adăugare curățăm textul explicit (dacă selectia e null).
+            txtFurnizorNume.Text = string.Empty;
+            txtFurnizorCIF.Text = string.Empty;
+            txtFurnizorTelefon.Text = string.Empty;
+            lstFurnizori.SelectedItem = null;
+        }
+
+        private void BtnStergeFurnizor_Click(object sender, RoutedEventArgs e)
+        {
+            if (lstFurnizori.SelectedItem is Furnizor furnizorSelectat)
+            {
+                ListaFurnizori.Remove(furnizorSelectat);
+                MessageBox.Show("Furnizorul a fost șters!", "Succes", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show("Selectați un furnizor pentru a-l șterge!", "Atenție", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
     }
 
     // Clasa entității actualizată
@@ -180,5 +232,36 @@ namespace GestiunePieseWPF
 
         public string PretAfisare => Pret.ToString("F2") + " RON";
         public string DataAdaugareFormatata => DataAdaugare.HasValue ? "Adăugat la: " + DataAdaugare.Value.ToShortDateString() : "Fără dată adăugare";
+    }
+
+    public class Furnizor : INotifyPropertyChanged
+    {
+        private string nume = string.Empty;
+        private string cif = string.Empty;
+        private string telefon = string.Empty;
+
+        public string Nume
+        {
+            get => nume;
+            set { nume = value; OnPropertyChanged(nameof(Nume)); }
+        }
+
+        public string CIF
+        {
+            get => cif;
+            set { cif = value; OnPropertyChanged(nameof(CIF)); }
+        }
+
+        public string Telefon
+        {
+            get => telefon;
+            set { telefon = value; OnPropertyChanged(nameof(Telefon)); }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }
