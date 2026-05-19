@@ -15,6 +15,9 @@ namespace GestiunePieseWPF
         private List<PiesaAuto> listaPiese = new List<PiesaAuto>();
         private List<string> categorii = new List<string> { "Motor", "Caroserie", "Electrice", "Consumabile" };
 
+        // Gestiunea fișierului de date
+        private AdministrarePiese_FisierText gestiuneFisier;
+
         // Lista de furnizori (folosim ObservableCollection pentru actualizare automată în UI)
         public ObservableCollection<Furnizor> ListaFurnizori { get; set; } = new ObservableCollection<Furnizor>();
 
@@ -25,10 +28,39 @@ namespace GestiunePieseWPF
 
             // Setăm lista de furnizori ca ItemsSource pentru lstFurnizori (se va defini în XAML)
             lstFurnizori.ItemsSource = ListaFurnizori;
-            
-            // Câteva date de test
+
+            // Câteva date de test furnizori
             ListaFurnizori.Add(new Furnizor { Nume = "AutoParts SRL", CIF = "RO123456", Telefon = "0722111222" });
             ListaFurnizori.Add(new Furnizor { Nume = "MotorExpert SA", CIF = "RO987654", Telefon = "0733444555" });
+
+            // Inițializare gestiune fișier piese
+            string caleFisier = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "piese.txt");
+            gestiuneFisier = new AdministrarePiese_FisierText(caleFisier);
+
+            // Încarcă piesele din fișier
+            listaPiese = gestiuneFisier.GetToatePiesele();
+
+            // Dacă fișierul era gol (prima rulare), adaugă piese demo
+            if (listaPiese.Count == 0)
+            {
+                var pieseDemo = new List<PiesaAuto>
+                {
+                    new PiesaAuto { Nume = "Filtru Ulei",          CodPiesa = "P001", Pret = 45.99,  Locatie = "Depozit", Categorie = "Motor",       EsteDisponibilOnline = true,  DataAdaugare = new DateTime(2024, 1, 15) },
+                    new PiesaAuto { Nume = "Placute Frana Fata",  CodPiesa = "P002", Pret = 189.50, Locatie = "Magazin", Categorie = "Caroserie",    EsteDisponibilOnline = false, DataAdaugare = new DateTime(2024, 2, 20) },
+                    new PiesaAuto { Nume = "Bujii NGK Set 4",     CodPiesa = "P003", Pret = 78.00,  Locatie = "Depozit", Categorie = "Motor",       EsteDisponibilOnline = true,  DataAdaugare = new DateTime(2024, 3, 5)  },
+                    new PiesaAuto { Nume = "Curea Distributie",   CodPiesa = "P004", Pret = 320.00, Locatie = "Furnizor",Categorie = "Motor",       EsteDisponibilOnline = true,  DataAdaugare = new DateTime(2024, 3, 10) },
+                    new PiesaAuto { Nume = "Bec Far H7",          CodPiesa = "P005", Pret = 25.00,  Locatie = "Magazin", Categorie = "Electrice",    EsteDisponibilOnline = false, DataAdaugare = new DateTime(2024, 4, 1)  },
+                    new PiesaAuto { Nume = "Antigel Verde 5L",    CodPiesa = "P006", Pret = 55.00,  Locatie = "Depozit", Categorie = "Consumabile",  EsteDisponibilOnline = false, DataAdaugare = new DateTime(2024, 4, 12) },
+                };
+                foreach (var p in pieseDemo)
+                {
+                    listaPiese.Add(p);
+                    gestiuneFisier.AdaugaPiesa(p);
+                }
+            }
+
+            // Afișează piesele în listă
+            ActualizareListaPiese();
         }
 
         private void MnuExit_Click(object sender, RoutedEventArgs e)
@@ -69,8 +101,9 @@ namespace GestiunePieseWPF
                     DataAdaugare = dpDataAdaugare.SelectedDate
                 };
 
-                // Adăugare în listă
+                // Adăugare în listă și salvare în fișier
                 listaPiese.Add(piesa);
+                gestiuneFisier.AdaugaPiesa(piesa);
 
                 // Curățăm câmpurile
                 txtNume.Clear();
@@ -151,6 +184,9 @@ namespace GestiunePieseWPF
                     piesaSelectata.EsteDisponibilOnline = chkOnline.IsChecked ?? false;
                     piesaSelectata.Categorie = cmbCategorie.Text;
                     piesaSelectata.DataAdaugare = dpDataAdaugare.SelectedDate;
+
+                    // Salvează toate piesele în fișier după modificare
+                    gestiuneFisier.SalveazaToate(listaPiese);
 
                     // Curățare
                     txtNume.Clear();

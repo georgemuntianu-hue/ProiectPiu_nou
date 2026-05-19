@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -7,5 +7,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
+
+  <!-- Excludem fișierele din proiectul consolă vechi care nu sunt necesare în WPF -->
+  <ItemGroup>
+    <Compile Remove="Program.cs" />
+    <Compile Remove="MagazinAuto.cs" />
+    <Compile Remove="Piesa.Auto.cs" />
+  </ItemGroup>
 
 </Project>

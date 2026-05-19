@@ -1,0 +1,6 @@
+Filtru Ulei;P001;45.99;Depozit;Motor;True;2024-01-15
+Placute Frana Fata;P002;189.50;Magazin;Caroserie;False;2024-02-20
+Bujii NGK Set 4;P003;78.00;Depozit;Motor;True;2024-03-05
+Curea Distributie;P004;320.00;Furnizor;Motor;True;2024-03-10
+Bec Far H7;P005;25.00;Magazin;Electrice;False;2024-04-01
+Antigel Verde 5L;P006;55.00;Depozit;Consumabile;False;2024-04-12
